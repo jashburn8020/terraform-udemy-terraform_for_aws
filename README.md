@@ -14,6 +14,10 @@ Notes and examples from the Terraform for AWS course in Udemy
     - [Security Group](#security-group)
     - [Dynamic Blocks](#dynamic-blocks)
     - [Challenge 2](#challenge-2)
+  - [Modules](#modules)
+    - [Handling Outputs](#handling-outputs)
+    - [Remote Modules](#remote-modules)
+    - [Challenge 3](#challenge-3)
   - [Other Resources](#other-resources)
 
 ## Initial Setup
@@ -734,6 +738,110 @@ Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
 4. Run the script [`challenge2/server-script.sh`](challenge2/server-script.sh) on the web server.
 
 See [`challenge2/main.tf`](challenge2/main.tf)
+
+## Modules
+
+- A module is a folder with code inside it
+- Example module:
+  - [`modules/ec2/ec2.tf`](modules/ec2/ec2.tf)
+  - referenced from [`modules/main.tf`](modules/main.tf)
+
+```console
+$ terraform init
+Initializing modules...
+- ec2module in ec2
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Finding latest version of hashicorp/aws...
+```
+
+- Re-run `terraform init` whenever you make any changes to a module
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.ec2module.aws_instance.ec2 will be created
+  + resource "aws_instance" "ec2" {
+      ...
+      + tags                         = {
+          + "Name" = "Name From Module"
+        }
+      ...
+...
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+module.ec2module.aws_instance.ec2: Creating...
+module.ec2module.aws_instance.ec2: Still creating... [10s elapsed]
+module.ec2module.aws_instance.ec2: Still creating... [20s elapsed]
+module.ec2module.aws_instance.ec2: Creation complete after 22s [id=i-0165f2da69d3c9c3d]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+```
+
+### Handling Outputs
+
+- See `output` blocks in
+  - [`modules/ec2/ec2.tf`](modules/ec2/ec2.tf)
+  - [`modules/main.tf`](modules/main.tf)
+
+```console
+$ terraform apply
+
+...
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + module_output = (known after apply)
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+module.ec2module.aws_instance.ec2: Creating...
+module.ec2module.aws_instance.ec2: Still creating... [10s elapsed]
+module.ec2module.aws_instance.ec2: Still creating... [20s elapsed]
+module.ec2module.aws_instance.ec2: Still creating... [30s elapsed]
+module.ec2module.aws_instance.ec2: Creation complete after 32s [id=i-0162cf81582f7910a]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+module_output = i-0162cf81582f7910a
+```
+
+### Remote Modules
+
+- [Terraform Registry](https://registry.terraform.io/): HashiCorp's platform containing modules that we can use
+
+### Challenge 3
+
+Modularise [`main.tf` from Challenge 2](challenge2/main.tf).
+
+See:
+
+- [`challenge3/main.tf`](challenge3/main.tf)
+- [`challenge3/ec2/ec2.tf`](challenge3/ec2/ec2.tf)
+- [`challenge3/eip/eip.tf`](challenge3/eip/eip.tf)
+- [`challenge3/sg/sec-group.tf`](challenge3/sg/sec-group.tf)
+
+See also <https://github.com/addamstj/Terraform-012/tree/master/challenge3>
 
 ## Other Resources
 
