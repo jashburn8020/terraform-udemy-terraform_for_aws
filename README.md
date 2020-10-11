@@ -38,7 +38,9 @@ Notes and examples from the Terraform for AWS course in Udemy
   - access type: `Programmatic access`
   - permissions:
     - `Attach existing policies directly`
-    - _can be more granular_
+    - _can be more granular, but not straightforward_:
+      - [What's the most efficient way to determine the minimum AWS permissions necessary for a Terraform configuration?](https://stackoverflow.com/questions/51273227/whats-the-most-efficient-way-to-determine-the-minimum-aws-permissions-necessary)
+      - [Determining a minimal IAM policy required to perform a terraform run](https://github.com/hashicorp/terraform/issues/2834)
   - tags: skip
   - review: `Create user`
 - Copy IAM user access key ID and secret access key or download the CSV file
