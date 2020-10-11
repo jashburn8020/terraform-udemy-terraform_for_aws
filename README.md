@@ -2,6 +2,20 @@
 
 Notes and examples from the Terraform for AWS course in Udemy
 
+- [Terraform for AWS - Beginner to Expert 2020 (0.12)](#terraform-for-aws---beginner-to-expert-2020-012)
+  - [Initial Setup](#initial-setup)
+    - [VS Code](#vs-code)
+    - [Terraform Installation](#terraform-installation)
+    - [AWS Setup](#aws-setup)
+  - [Terraform 101](#terraform-101)
+    - [Variables 101](#variables-101)
+  - [EC2](#ec2)
+    - [Elastic IP](#elastic-ip)
+    - [Security Group](#security-group)
+    - [Dynamic Blocks](#dynamic-blocks)
+    - [Challenge 2](#challenge-2)
+  - [Other Resources](#other-resources)
+
 ## Initial Setup
 
 ### VS Code
@@ -41,7 +55,7 @@ Notes and examples from the Terraform for AWS course in Udemy
 
 ## Terraform 101
 
-- Create [`main.tf`](first-resource/main.tf)
+- Create [`first-resource/main.tf`](first-resource/main.tf)
 - Initialise the `first-resource` directory
   - go to the `first-resource` directory
   - `terraform init`
@@ -302,6 +316,422 @@ Outputs:
 
 vpcid = vpc-0009774c932c1b182
 ```
+
+## EC2
+
+- Setting up an EC2 instance
+  - [`ec2/main.tf`](ec2/main.tf)
+  - documentation: <https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance>
+- Copy one of the AMI IDs at <https://eu-west-2.console.aws.amazon.com/ec2/v2/home?region=eu-west-2#LaunchInstanceWizard:>
+  - e.g., `ami-0a669382ea0feb73a`
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_instance.ec2 will be created
+  + resource "aws_instance" "ec2" {
+      + ami                          = "ami-0a669382ea0feb73a"
+      + arn                          = (known after apply)
+      + associate_public_ip_address  = (known after apply)
+      + availability_zone            = (known after apply)
+      + cpu_core_count               = (known after apply)
+      + cpu_threads_per_core         = (known after apply)
+      + get_password_data            = false
+      + host_id                      = (known after apply)
+      + id                           = (known after apply)
+      + instance_state               = (known after apply)
+      + instance_type                = "t2.micro"
+      + ipv6_address_count           = (known after apply)
+      + ipv6_addresses               = (known after apply)
+      + key_name                     = (known after apply)
+      + outpost_arn                  = (known after apply)
+      + password_data                = (known after apply)
+      + placement_group              = (known after apply)
+      + primary_network_interface_id = (known after apply)
+      + private_dns                  = (known after apply)
+      + private_ip                   = (known after apply)
+      + public_dns                   = (known after apply)
+      + public_ip                    = (known after apply)
+      + secondary_private_ips        = (known after apply)
+      + security_groups              = (known after apply)
+      + source_dest_check            = true
+      + subnet_id                    = (known after apply)
+      + tenancy                      = (known after apply)
+      + volume_tags                  = (known after apply)
+      + vpc_security_group_ids       = (known after apply)
+
+      + ebs_block_device {
+          + delete_on_termination = (known after apply)
+          + device_name           = (known after apply)
+          + encrypted             = (known after apply)
+          + iops                  = (known after apply)
+          + kms_key_id            = (known after apply)
+          + snapshot_id           = (known after apply)
+          + volume_id             = (known after apply)
+          + volume_size           = (known after apply)
+          + volume_type           = (known after apply)
+        }
+
+      + ephemeral_block_device {
+          + device_name  = (known after apply)
+          + no_device    = (known after apply)
+          + virtual_name = (known after apply)
+        }
+
+      + metadata_options {
+          + http_endpoint               = (known after apply)
+          + http_put_response_hop_limit = (known after apply)
+          + http_tokens                 = (known after apply)
+        }
+
+      + network_interface {
+          + delete_on_termination = (known after apply)
+          + device_index          = (known after apply)
+          + network_interface_id  = (known after apply)
+        }
+
+      + root_block_device {
+          + delete_on_termination = (known after apply)
+          + device_name           = (known after apply)
+          + encrypted             = (known after apply)
+          + iops                  = (known after apply)
+          + kms_key_id            = (known after apply)
+          + volume_id             = (known after apply)
+          + volume_size           = (known after apply)
+          + volume_type           = (known after apply)
+        }
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_instance.ec2: Creating...
+aws_instance.ec2: Still creating... [10s elapsed]
+aws_instance.ec2: Still creating... [20s elapsed]
+aws_instance.ec2: Creation complete after 22s [id=i-06751a059138204ca]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+```
+
+### Elastic IP
+
+- Setting up an Elastic IP for an EC2 instance
+  - [`eip/main.tf`](eip/main.tf)
+  - documentation: <https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip>
+
+```console
+terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_eip.elasticeip will be created
+  + resource "aws_eip" "elasticeip" {
+      + allocation_id     = (known after apply)
+      + association_id    = (known after apply)
+      + customer_owned_ip = (known after apply)
+      + domain            = (known after apply)
+      + id                = (known after apply)
+      + instance          = (known after apply)
+      + network_interface = (known after apply)
+      + private_dns       = (known after apply)
+      + private_ip        = (known after apply)
+      + public_dns        = (known after apply)
+      + public_ip         = (known after apply)
+      + public_ipv4_pool  = (known after apply)
+      + vpc               = (known after apply)
+    }
+
+  # aws_instance.ec2 will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_instance.ec2: Creating...
+aws_instance.ec2: Still creating... [10s elapsed]
+aws_instance.ec2: Still creating... [20s elapsed]
+aws_instance.ec2: Still creating... [30s elapsed]
+aws_instance.ec2: Creation complete after 33s [id=i-04f7918b8e75fdb79]
+aws_eip.elasticeip: Creating...
+aws_eip.elasticeip: Creation complete after 1s [id=eipalloc-039d58b23b7c25a4a]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+EIP = 3.11.254.176
+```
+
+### Security Group
+
+- Setting up a Security Group for an EC2 instance
+  - [`sg/main.tf`](sg/main.tf)
+  - documentation: <https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group>
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_instance.ec2 will be created
+  + resource "aws_instance" "ec2" {
+      ...
+      + security_groups              = [
+          + "Allow HTTPS",
+        ]
+      ...
+    }
+
+  # aws_security_group.webtraffic will be created
+  + resource "aws_security_group" "webtraffic" {
+      + arn                    = (known after apply)
+      + description            = "Managed by Terraform"
+      + egress                 = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 443
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 443
+            },
+        ]
+      + id                     = (known after apply)
+      + ingress                = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 443
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 443
+            },
+        ]
+      + name                   = "Allow HTTPS"
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + vpc_id                 = (known after apply)
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_security_group.webtraffic: Creating...
+aws_security_group.webtraffic: Creation complete after 2s [id=sg-0fd29dd47a9299189]
+aws_instance.ec2: Creating...
+aws_instance.ec2: Still creating... [10s elapsed]
+aws_instance.ec2: Still creating... [20s elapsed]
+aws_instance.ec2: Creation complete after 22s [id=i-06d14c73cb1f21bc7]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+```
+
+### Dynamic Blocks
+
+- Takes a list, go through all elements, and turn them into Terraform code
+  - [`dynamic/main.tf`](dynamic/main.tf)
+  - documentation: <https://www.terraform.io/docs/configuration/expressions.html#dynamic-blocks>
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_instance.ec2 will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+  # aws_security_group.webtraffic will be created
+  + resource "aws_security_group" "webtraffic" {
+      + arn                    = (known after apply)
+      + description            = "Managed by Terraform"
+      + egress                 = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 25
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 25
+            },
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 3306
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 3306
+            },
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 443
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 443
+            },
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 53
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 53
+            },
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 8080
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 8080
+            },
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 80
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 80
+            },
+        ]
+      + id                     = (known after apply)
+      + ingress                = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 443
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 443
+            },
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 80
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 80
+            },
+        ]
+      + name                   = "Allow HTTPS"
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + vpc_id                 = (known after apply)
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_security_group.webtraffic: Creating...
+aws_security_group.webtraffic: Creation complete after 2s [id=sg-09df893e20000b564]
+aws_instance.ec2: Creating...
+aws_instance.ec2: Still creating... [10s elapsed]
+aws_instance.ec2: Still creating... [20s elapsed]
+aws_instance.ec2: Creation complete after 22s [id=i-020fbef19a27f7df0]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+```
+
+### Challenge 2
+
+1. Create a DB Server and output the private IP.
+2. Create a Web Server and ensure it has a fixed public IP. Output the public IP.
+3. Create a Security Group for the web server opening ports 80 and 443.
+4. Run the script [`challenge2/server-script.sh`](challenge2/server-script.sh) on the web server.
+
+See [`challenge2/main.tf`](challenge2/main.tf)
 
 ## Other Resources
 
