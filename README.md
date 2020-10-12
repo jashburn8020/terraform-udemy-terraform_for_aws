@@ -18,6 +18,7 @@ Notes and examples from the Terraform for AWS course in Udemy
     - [Handling Outputs](#handling-outputs)
     - [Remote Modules](#remote-modules)
     - [Challenge 3](#challenge-3)
+  - [IAM Masterclass](#iam-masterclass)
   - [Other Resources](#other-resources)
 
 ## Initial Setup
@@ -842,6 +843,96 @@ See:
 - [`challenge3/sg/sec-group.tf`](challenge3/sg/sec-group.tf)
 
 See also <https://github.com/addamstj/Terraform-012/tree/master/challenge3>
+
+## IAM Masterclass
+
+- Create complex IAM policies to be imported into Terraform
+- Set up IAM policies using the AWS console
+  - use the visual editor to select services and their actions and access levels
+  - specify `All resources` for each service since we have not set them up in AWS
+  - copy the generated JSON
+- Attach IAM policies to a user
+  - paste the generated JSON into [`iam/main.tf`](iam/main.tf)
+  - why not create the policies and attach it to the user using the AWS console
+    - business requirement to keep policies in code
+    - when you have multiple AWS accounts
+    - if you are an MSP, rather than doing it in the console for each client, you have it in code as a template
+    - you can track and audit it, see changes to it, and have it in version control
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_iam_policy.customPolicy will be created
+  + resource "aws_iam_policy" "customPolicy" {
+      + arn    = (known after apply)
+      + id     = (known after apply)
+      + name   = "GlacierEFSEC2"
+      + path   = "/"
+      + policy = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "ec2:DeleteManagedPrefixList",
+                          + "ec2:AuthorizeSecurityGroupIngress",
+                          + "ec2:ReplaceRouteTableAssociation",
+                          + "ec2:ModifyManagedPrefixList",
+                          + ...
+                          + "ec2:ResetFpgaImageAttribute",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                      + Sid      = "VisualEditor0"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+    }
+
+  # aws_iam_policy_attachment.policyBind will be created
+  + resource "aws_iam_policy_attachment" "policyBind" {
+      + id         = (known after apply)
+      + name       = "attachment"
+      + policy_arn = (known after apply)
+      + users      = [
+          + "TJ",
+        ]
+    }
+
+  # aws_iam_user.myUser will be created
+  + resource "aws_iam_user" "myUser" {
+      + arn           = (known after apply)
+      + force_destroy = false
+      + id            = (known after apply)
+      + name          = "TJ"
+      + path          = "/"
+      + unique_id     = (known after apply)
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_iam_user.myUser: Creating...
+aws_iam_policy.customPolicy: Creating...
+aws_iam_user.myUser: Creation complete after 1s [id=TJ]
+
+Error: Error creating IAM policy GlacierEFSEC2: LimitExceeded: Cannot exceed quota for PolicySize: 6144
+	status code: 409, request id: 9aeda476-0bb2-4b9c-9dff-84816bbf9a71
+```
+
+- If you see the error message above, this means the policy is too big, in which case you'll need to split it up(?)
 
 ## Other Resources
 
