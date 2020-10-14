@@ -19,6 +19,9 @@ Notes and examples from the Terraform for AWS course in Udemy
     - [Remote Modules](#remote-modules)
     - [Challenge 3](#challenge-3)
   - [IAM Masterclass](#iam-masterclass)
+  - [RDS](#rds)
+  - [Advanced Terraform](#advanced-terraform)
+    - [Remote Backend](#remote-backend)
   - [Other Resources](#other-resources)
 
 ## Initial Setup
@@ -933,6 +936,122 @@ Error: Error creating IAM policy GlacierEFSEC2: LimitExceeded: Cannot exceed quo
 ```
 
 - If you see the error message above, this means the policy is too big, in which case you'll need to split it up(?)
+
+## RDS
+
+- Use the AWS console to find out about the options/arguments that are available and their possible values
+- Setting up RDS:
+  - [`rds/main.tf`](rds/main.tf)
+  - documentation: <https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance>
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_db_instance.myRDS will be created
+  + resource "aws_db_instance" "myRDS" {
+      + address                               = (known after apply)
+      + allocated_storage                     = 20
+      + apply_immediately                     = (known after apply)
+      + arn                                   = (known after apply)
+      + auto_minor_version_upgrade            = true
+      + availability_zone                     = (known after apply)
+      + backup_retention_period               = (known after apply)
+      + backup_window                         = (known after apply)
+      + ca_cert_identifier                    = (known after apply)
+      + character_set_name                    = (known after apply)
+      + copy_tags_to_snapshot                 = false
+      + db_subnet_group_name                  = (known after apply)
+      + delete_automated_backups              = true
+      + endpoint                              = (known after apply)
+      + engine                                = "mariadb"
+      + engine_version                        = "10.2.21"
+      + hosted_zone_id                        = (known after apply)
+      + id                                    = (known after apply)
+      + identifier                            = "my-first-rds"
+      + identifier_prefix                     = (known after apply)
+      + instance_class                        = "db.t2.micro"
+      + kms_key_id                            = (known after apply)
+      + license_model                         = (known after apply)
+      + maintenance_window                    = (known after apply)
+      + monitoring_interval                   = 0
+      + monitoring_role_arn                   = (known after apply)
+      + multi_az                              = (known after apply)
+      + name                                  = "myDB"
+      + option_group_name                     = (known after apply)
+      + parameter_group_name                  = (known after apply)
+      + password                              = (sensitive value)
+      + performance_insights_enabled          = false
+      + performance_insights_kms_key_id       = (known after apply)
+      + performance_insights_retention_period = (known after apply)
+      + port                                  = 3306
+      + publicly_accessible                   = false
+      + replicas                              = (known after apply)
+      + resource_id                           = (known after apply)
+      + skip_final_snapshot                   = true
+      + status                                = (known after apply)
+      + storage_type                          = (known after apply)
+      + timezone                              = (known after apply)
+      + username                              = "bob"
+      + vpc_security_group_ids                = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_db_instance.myRDS: Creating...
+aws_db_instance.myRDS: Still creating... [10s elapsed]
+...
+aws_db_instance.myRDS: Still creating... [3m0s elapsed]
+aws_db_instance.myRDS: Creation complete after 3m8s [id=my-first-rds]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+```
+
+## Advanced Terraform
+
+### Remote Backend
+
+- The state file is the most important thing in terraform - don't lose it
+- A way Terraform helps keep the state file safe is through a remote backend
+  - we can use an S3 bucket to store the state file
+    - a central place where the state file is located
+    - can be version controlled
+    - state file locking - prevent 2 engineers writing into it at the same time
+- Create a bucket through the AWS console
+  - enable versioning
+- Setting up a remote backend:
+  - [`backend/main.tf`](backend/main.tf)
+  - [`backend/backend.tf`](backend/backend.tf)
+  - documentation: <https://www.terraform.io/docs/backends/types/s3.html>
+
+```console
+$ terraform init
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+Initializing provider plugins...
+- Finding latest version of hashicorp/aws...
+- Installing hashicorp/aws v3.10.0...
+- Installed hashicorp/aws v3.10.0 (signed by HashiCorp)
+...
+```
+
+- On running `terraform apply`, the state file will be stored in S3 at the specified `key` folder path
+- `terraform destroy` will not delete the state file from the bucket
 
 ## Other Resources
 
