@@ -22,6 +22,11 @@ Notes and examples from the Terraform for AWS course in Udemy
   - [RDS](#rds)
   - [Advanced Terraform](#advanced-terraform)
     - [Remote Backend](#remote-backend)
+    - [Dependencies](#dependencies)
+    - [Count](#count)
+    - [Multiple Variable Files](#multiple-variable-files)
+    - [Terraform Import](#terraform-import)
+    - [Data Sources](#data-sources)
   - [Other Resources](#other-resources)
 
 ## Initial Setup
@@ -1052,6 +1057,246 @@ Initializing provider plugins...
 
 - On running `terraform apply`, the state file will be stored in S3 at the specified `key` folder path
 - `terraform destroy` will not delete the state file from the bucket
+
+### Dependencies
+
+- Dependencies - when you need a resource to come up before another one
+- Setting up dependencies - `depends_on`:
+  - [`dep/main.tf`](dep/main.tf)
+
+```console
+$ terraform apply
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_instance.db will be created
+  + resource "aws_instance" "db" {
+      + ami                          = "ami-0a669382ea0feb73a"
+      ...
+    }
+
+  # aws_instance.web will be created
+  + resource "aws_instance" "web" {
+      + ami                          = "ami-0a669382ea0feb73a"
+      ...
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+aws_instance.db: Creating...
+aws_instance.db: Still creating... [10s elapsed]
+aws_instance.db: Still creating... [20s elapsed]
+aws_instance.db: Creation complete after 21s [id=i-0bbbb6a7b98734f46]
+aws_instance.web: Creating...
+aws_instance.web: Still creating... [10s elapsed]
+aws_instance.web: Still creating... [20s elapsed]
+aws_instance.web: Still creating... [30s elapsed]
+aws_instance.web: Creation complete after 32s [id=i-0c2127bc73631dd65]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+```
+
+```console
+$ terraform destroy
+...
+aws_instance.web: Destroying... [id=i-0c2127bc73631dd65]
+aws_instance.web: Still destroying... [id=i-0c2127bc73631dd65, 10s elapsed]
+aws_instance.web: Still destroying... [id=i-0c2127bc73631dd65, 20s elapsed]
+aws_instance.web: Destruction complete after 29s
+aws_instance.db: Destroying... [id=i-0bbbb6a7b98734f46]
+aws_instance.db: Still destroying... [id=i-0bbbb6a7b98734f46, 10s elapsed]
+aws_instance.db: Still destroying... [id=i-0bbbb6a7b98734f46, 20s elapsed]
+aws_instance.db: Destruction complete after 29s
+
+Destroy complete! Resources: 2 destroyed.
+```
+
+### Count
+
+- Create multiple resources - `count`:
+  - [`count-demo/main.tf`](count-demo/main.tf)
+
+```console
+$ terraform plan
+...
+Terraform will perform the following actions:
+
+  # aws_instance.ec2[0] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+  # aws_instance.ec2[1] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+  # aws_instance.ec2[2] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+```
+
+- Create multiple resources with specific values:
+  - [`count-advanced/main.tf`](count-advanced/main.tf)
+  - [`count-advanced/ec2/ec2.tf`](count-advanced/ec2/ec2.tf)
+
+```console
+$ terraform apply
+...
+Terraform will perform the following actions:
+
+  # module.ec2.aws_instance.ec2[0] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+  # module.ec2.aws_instance.ec2[1] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+  # module.ec2.aws_instance.ec2[2] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+module.ec2.aws_instance.ec2[2]: Creating...
+module.ec2.aws_instance.ec2[1]: Creating...
+module.ec2.aws_instance.ec2[0]: Creating...
+module.ec2.aws_instance.ec2[1]: Still creating... [10s elapsed]
+module.ec2.aws_instance.ec2[0]: Still creating... [10s elapsed]
+module.ec2.aws_instance.ec2[2]: Still creating... [10s elapsed]
+module.ec2.aws_instance.ec2[1]: Still creating... [20s elapsed]
+module.ec2.aws_instance.ec2[2]: Still creating... [20s elapsed]
+module.ec2.aws_instance.ec2[0]: Still creating... [20s elapsed]
+module.ec2.aws_instance.ec2[1]: Creation complete after 22s [id=i-028d165894ec980e8]
+module.ec2.aws_instance.ec2[0]: Creation complete after 22s [id=i-0288317d2a9622c3e]
+module.ec2.aws_instance.ec2[2]: Still creating... [30s elapsed]
+module.ec2.aws_instance.ec2[2]: Creation complete after 32s [id=i-0c2b9d2ea30ea15aa]
+
+Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+private_ips = [
+  [
+    "172.31.12.230",
+    "172.31.1.204",
+    "172.31.13.36",
+  ],
+]
+```
+
+### Multiple Variable Files
+
+- Multiple environments to support, e.g., dev, test, uat, production
+  - you don't want to have specific Terraform files for each environment
+- Use variable files - `-var-file=var_file.tfvars`:
+  - [`vars/main.tf`](vars/main.tf)
+  - [`vars/test.tfvars`](vars/test.tfvars)
+  - [`vars/prod.tfvars`](vars/prod.tfvars)
+
+```console
+$ terraform plan -var-file=test.tfvars
+...
+Terraform will perform the following actions:
+
+  # aws_instance.ec2[0] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+  # aws_instance.ec2[1] will be created
+  + resource "aws_instance" "ec2" {
+      ...
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+```
+
+```console
+$ terraform plan -var-file=prod.tfvars
+...
+Plan: 5 to add, 0 to change, 0 to destroy.
+```
+
+### Terraform Import
+
+- Set up in AWS Console, and then import into your state file:
+  - [`import/main.tf`](import/main.tf)
+  - settings in `main.tf` must match what is set up via AWS Console
+
+```console
+$ terraform import aws_vpc.myvpc2 vpc-0a275ec7655338e04
+aws_vpc.myvpc2: Importing from ID "vpc-0a275ec7655338e04"...
+aws_vpc.myvpc2: Import prepared!
+  Prepared aws_vpc for import
+aws_vpc.myvpc2: Refreshing state... [id=vpc-0a275ec7655338e04]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### Data Sources
+
+- Data sources are a way Terraform can query AWS and return a result
+  - make API request to get information
+  - they don't set anything up
+- Deploy the resources in [`data-sources/main.tf`](data-sources/main.tf)
+  - documentation: <https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/instance>
+
+```console
+$ terraform apply
+data.aws_instance.dbsearch: Refreshing state...
+aws_instance.db: Refreshing state... [id=i-04d6b96f2fb3baa81]
+aws_instance.web: Refreshing state... [id=i-0f2aa8ec50d900089]
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+
+Terraform will perform the following actions:
+
+Plan: 0 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + dbservers = "eu-west-2a"
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+dbservers = eu-west-2a
+```
 
 ## Other Resources
 
